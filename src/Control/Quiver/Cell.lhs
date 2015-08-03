@@ -13,35 +13,32 @@
 > ) where
 
 > import Data.Cell
-> import Control.Quiver
+> import Control.Quiver.SP
 
 > -- | A simple Quiver processor that converts a stream of cells into a stream of rows,
 > --   with each row represented by a non-empty list of cell values.
 
-> toRows :: (Monoid a) => SP (Cell a) [a] f ()
+> toRows :: Monoid a => SP (Cell a) [a] f e
 > toRows = loop0
 >  where
 >   loop0 = loop1 [] []
->   loop1 row cell = consume () (loop2 row cell) (emit_ (assemble row cell))
+>   loop1 row cell = consume () (loop2 row cell) (spemit (assemble row cell))
 >   loop2 row cell (Cell part d) =
 >     case d of
 >       EOP -> loop1 row cell'
 >       EOC -> loop1 (mconcat (reverse cell') : row) []
->       _   -> produce (assemble row cell') (const $ loop0) (deliver ())
+>       _   -> assemble row cell' >:> loop0
 >    where
 >     cell' = part:cell
 >   assemble row cell = reverse (mconcat (reverse cell) : row)
 
-> -- | A simple Quiver processor that converts a stream of rows to a stream of cells,
+> -- | A simple Quiver processor that converts a stream of rows to a stream of cells.
 > --   In this version, the final cell in the table is not marked with @EOT@ to avoid
-> --   the need for row lookahead, delivering the list of any cells that could not
-> --   be produced from the final consumed row.
-> --
-> --   Empty input rows are ignored.
+> --   the need for row lookahead.  Empty input rows are ignored.
 
-> fromRows :: SP [a] (Cell a) f [a]
+> fromRows :: SP [a] (Cell a) f e
 > fromRows = loop0
 >  where
->   loop0 = consume () loop1 (deliver [])
->   loop1 (x:xs) = produce (Cell x (if null xs then EOR else EOC)) (const $ loop1 xs) (deliver xs)
+>   loop0 = consume () loop1 (deliver SPComplete)
+>   loop1 (x:xs) = Cell x (if null xs then EOR else EOC) >:> loop1 xs
 >   loop1 [] = loop0
