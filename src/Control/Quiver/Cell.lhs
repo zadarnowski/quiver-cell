@@ -21,7 +21,7 @@
 > toRows :: Monoid a => SP (Cell a) [a] f e
 > toRows = loop0
 >  where
->   loop0 = loop1 [] []
+>   loop0 = consume () (loop2 [] []) (deliver SPComplete)
 >   loop1 row cell = consume () (loop2 row cell) (spemit (assemble row cell))
 >   loop2 row cell (Cell part d) =
 >     case d of
