@@ -14,23 +14,26 @@
 
 > import Data.Cell
 > import Control.Quiver.SP
+> import qualified Data.DList as D
 
 > -- | A simple Quiver processor that converts a stream of cells into a stream of rows,
 > --   with each row represented by a non-empty list of cell values.
 
-> toRows :: Monoid a => SP (Cell a) [a] f e
-> toRows = loop0
+> toRows :: (Monoid a, Functor f) => SP (Cell a) [a] f e
+> toRows = loop0 >->> sppure D.toList >&> fst
 >  where
->   loop0 = consume () (loop2 [] []) (deliver SPComplete)
+>   loop0 = consume () (loop2 D.empty D.empty) (deliver SPComplete)
+>
 >   loop1 row cell = consume () (loop2 row cell) (spemit (assemble row cell))
+>
 >   loop2 row cell (Cell part d) =
 >     case d of
 >       EOP -> loop1 row cell'
->       EOC -> loop1 (mconcat (reverse cell') : row) []
+>       EOC -> loop1 (row `D.snoc` mconcat (D.toList cell')) D.empty
 >       _   -> assemble row cell' >:> loop0
 >    where
->     cell' = part:cell
->   assemble row cell = reverse (mconcat (reverse cell) : row)
+>     cell' = cell `D.snoc` part
+>   assemble row cell = row `D.snoc` mconcat (D.toList cell)
 
 > -- | A simple Quiver processor that converts a stream of rows to a stream of cells.
 > --   In this version, the final cell in the table is not marked with @EOT@ to avoid
