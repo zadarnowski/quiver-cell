@@ -42,12 +42,18 @@
 >   assemble row cell = row `D.snoc` mconcat (D.toList cell)
 >   assembleComplete row = D.toList . assemble row
 
-> -- | A variant of 'toRows' which provides support for stating a
-> --   minimum and maximum length of each row.
+> -- | Possible failure cases when constructing bounded rows.
 
 > data BoundedFailure = TooShort Int Int
+>                       -- ^ The required minimum length and actual
+>                       -- length.
 >                     | TooLong Int Int
+>                       -- ^ The required maximum length and length
+>                       -- found so far.
 >                     deriving (Eq, Ord, Show, Read)
+
+> -- | A variant of 'toRows' which provides support for stating a
+> --   minimum and maximum length of each row.
 
 > toBoundedRows :: (Monoid a, Functor f) => Int -> Int -> SP (Cell a) (Int, [a]) f BoundedFailure
 > toBoundedRows lb ub = loop0
