@@ -15,6 +15,8 @@
 > import Data.Cell
 > import Control.Quiver.SP
 
+> import qualified Data.Foldable as F
+
 > -- | A simple Quiver processor that converts a stream of cells into a stream of rows,
 > --   with each row represented by a non-empty list of cell values.
 
@@ -36,9 +38,9 @@
 > --   In this version, the final cell in the table is not marked with @EOT@ to avoid
 > --   the need for row lookahead.  Empty input rows are ignored.
 
-> fromRows :: SP [a] (Cell a) f e
+> fromRows :: (F.Foldable t) => SP (t a) (Cell a) f e
 > fromRows = loop0
 >  where
 >   loop0 = consume () loop1 (deliver SPComplete)
->   loop1 (x:xs) = Cell x (if null xs then EOR else EOC) >:> loop1 xs
->   loop1 [] = loop0
+>
+>   loop1 = snd . F.foldr (\x (d,act) -> (EOC, Cell x d >:> act)) (EOR, loop0)
