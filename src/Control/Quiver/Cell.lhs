@@ -11,13 +11,14 @@
 > -- Quiver processors converting between cellular and traditional tabular data.
 
 > module Control.Quiver.Cell (
->   toRows, toBoundedRows, fromRows,
+>   toRows, toBoundedRows, toBoundedVectors, fromRows,
 > ) where
 
 > import Data.Cell
 > import Control.Arrow (first, second)
 > import Control.Quiver.SP
 > import qualified Data.DList as D
+> import Data.Vector (Vector, fromListN)
 
 > import qualified Data.Foldable as F
 
@@ -70,6 +71,11 @@
 >   assembleComplete rowC = second D.toList . assemble rowC
 >
 >   assemble rowC cell = second (`D.snoc` mconcat (D.toList cell)) rowC
+
+> -- | A variant of 'toBoundedRows' that returns a 'Vector'.
+
+> toBoundedVectors :: (Monoid a, Functor f) => Int -> Int -> SP (Cell a) (Vector a) f BoundedFailure
+> toBoundedVectors lb ub = toBoundedRows lb ub >->> sppure (uncurry fromListN) >&> fst
 
 > -- | A simple Quiver processor that converts a stream of rows to a stream of cells.
 > --   In this version, the final cell in the table is not marked with @EOT@ to avoid
