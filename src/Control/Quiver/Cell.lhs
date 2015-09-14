@@ -11,7 +11,9 @@
 > -- Quiver processors converting between cellular and traditional tabular data.
 
 > module Control.Quiver.Cell (
->   toRows, toBoundedRows, toBoundedVectors, fromRows,
+>   toRows, fromRows,
+>   -- * Bounded row lengths
+>   BoundedFailure(..), toBoundedRows, toBoundedVectors,
 > ) where
 
 > import Data.Cell
