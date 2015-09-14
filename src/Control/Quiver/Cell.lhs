@@ -70,7 +70,7 @@
 >       EOC | c' > ub   -> deliver . SPFailed $ TooLong ub c'
 >           | otherwise -> loop1 (assemble (c',row) cell') D.empty
 >       _   | c' < lb   -> deliver . SPFailed $ TooShort lb c'
->           | c' >= ub  -> deliver . SPFailed $ TooLong ub c'
+>           | c' > ub   -> deliver . SPFailed $ TooLong ub c'
 >           | otherwise -> assembleComplete (c',row) cell' >:> loop0
 >    where
 >     cell' = cell `D.snoc` part
